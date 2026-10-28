@@ -1,0 +1,41 @@
+﻿using System;
+using System.Text.Json;
+
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+Console.InputEncoding = System.Text.Encoding.UTF8;
+
+//тут я зробив умовний json і функцію шоб відступи зберігались при серіалізації і десеріалізації
+Product product = new Product
+{
+    Id = 1,
+    Name = "Notebook",
+    Price = 2500,
+    Quantity = 5
+};
+JsonSerializerOptions options = new JsonSerializerOptions {WriteIndented = true};
+
+// Серіалізація об'єкта
+string json = JsonSerializer.Serialize(product, options);
+Console.WriteLine("JSON товару:");
+Console.WriteLine(json);
+
+// Десеріалізація JSON
+Product? restoredProduct = JsonSerializer.Deserialize<Product>(json);
+
+if (restoredProduct != null) {
+    Console.WriteLine("\nВідновлені дані товару:");
+    Console.WriteLine($"ID: {restoredProduct.Id}");
+    Console.WriteLine($"Назва: {restoredProduct.Name}");
+    Console.WriteLine($"Ціна: {restoredProduct.Price}");
+    Console.WriteLine($"Кількість: {restoredProduct.Quantity}");
+}
+
+
+
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public decimal Price { get; set; }
+    public int Quantity { get; set; }
+}

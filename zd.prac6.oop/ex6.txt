@@ -1,0 +1,117 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+Console.InputEncoding = System.Text.Encoding.UTF8;
+string filePath = "books.json";
+List<Book> books = new List<Book>();
+
+while (true){
+    Console.WriteLine("=============================================");
+    Console.WriteLine("1 - Додати книгу");
+    Console.WriteLine("2 - Пошук книги");
+    Console.WriteLine("3 - Видалити книгу");
+    Console.WriteLine("4 - Завантажити дані з файлу");
+    Console.WriteLine("5 - Вивести список книг");
+    Console.WriteLine("0 - Вихід");
+    Console.Write("Ваш вибір: ");
+
+    string choice = Console.ReadLine()!;
+    Console.WriteLine("-----------------------------------------");
+    if (choice == "1") {
+        Book book = new Book();
+        Console.Write("Введіть назву книги: ");
+        book.Title = Console.ReadLine()!;
+        Console.Write("Введіть автора: ");
+        book.Author = Console.ReadLine()!;
+        int maxId = 0;
+
+        foreach (Book b in books) {
+            if (b.Id > maxId) { maxId = b.Id;}
+        }
+        book.Id = maxId + 1;
+        Console.WriteLine($"ID книги: {book.Id}");
+        books.Add(book);
+
+        //сіреалізація та збереження у файл
+        JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
+        string json = JsonSerializer.Serialize(books, options);
+        File.WriteAllText(filePath, json);
+        Console.WriteLine("Книгу додано та збережено у файл.");
+    }
+    else if (choice == "2") {
+        Console.Write("Введіть назву книги або автора для пошуку: ");
+        string search = Console.ReadLine()!;
+        bool found = false;
+
+        foreach (Book book in books) {
+            if (book.Title.Contains(search, StringComparison.OrdinalIgnoreCase) || book.Author.Contains(search, StringComparison.OrdinalIgnoreCase)) {
+                Console.WriteLine($"ID: {book.Id}, Назва: {book.Title}, Автор: {book.Author}");
+                found = true;
+            }
+        }
+
+        if (!found) {Console.WriteLine("Книгу не знайдено.");}
+    }
+    else if (choice == "3") {
+        Console.Write("Введіть ID книги для видалення: ");
+        int id = int.Parse(Console.ReadLine()!);
+        Book? bookToDelete = null;
+        foreach (Book book in books) {
+            if (book.Id == id) {
+                bookToDelete = book;
+                break;
+            }
+        }
+        if (bookToDelete != null) {
+            books.Remove(bookToDelete);
+            JsonSerializerOptions options = new JsonSerializerOptions {WriteIndented = true};
+            string json = JsonSerializer.Serialize(books, options);
+            File.WriteAllText(filePath, json);
+            Console.WriteLine("Книгу видалено та збережено зміни.");
+        }
+        else {Console.WriteLine("Книгу з таким ID не знайдено.");}
+    }
+    else if (choice == "4") {
+        try {
+            string jsonFromFile = File.ReadAllText(filePath);
+            books = JsonSerializer.Deserialize<List<Book>>(jsonFromFile) ?? new List<Book>();
+            Console.WriteLine("Дані завантажено з books.json.");
+        }
+        catch (FileNotFoundException) {
+            Console.WriteLine("Файл books.json не знайдено.");
+            continue;
+        }
+        catch (JsonException) {
+            Console.WriteLine("Помилка: неправильний формат JSON-файлу.");
+            continue;
+        }
+        catch (IOException) {
+            Console.WriteLine("Помилка під час читання файлу.");
+            continue;
+        }
+        catch (UnauthorizedAccessException){
+            Console.WriteLine("Немає дозволу на читання файлу.");
+            continue;
+        }
+    }
+    else if (choice == "5") {
+        Console.WriteLine("\nСписок книг:"); 
+        if (books.Count == 0) {Console.WriteLine("Каталог порожній.");}
+        foreach (Book book in books) {Console.WriteLine($"ID: {book.Id}, Назва: {book.Title}, Автор: {book.Author}");}
+    }
+    else if (choice == "0") {break;}
+    else {Console.WriteLine("Невідомий пункт меню.");}
+}
+
+
+
+
+public class Book
+{
+    public int Id { get; set; }
+    public string Title { get; set; } = "";
+    public string Author { get; set; } = "";
+}

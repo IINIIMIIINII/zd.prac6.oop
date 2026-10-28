@@ -1,0 +1,91 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+Console.InputEncoding = System.Text.Encoding.UTF8;
+string filePath = "students.json";
+List<Student> students = new List<Student>();
+
+while (true)
+{
+    Console.WriteLine("1 - Ввести дані студентів");
+    Console.WriteLine("2 - Завантажити дані з файлу");
+    Console.WriteLine("0 - Вихід");
+    Console.Write("Ваш вибір: ");
+    string choice = Console.ReadLine()!;
+    Console.WriteLine("-----------------------------------------");
+    if (choice == "1")
+    {
+        students.Clear();
+        Console.Write("Введіть кількість студентів: ");
+        int n = int.Parse(Console.ReadLine()!);
+        for (int i = 0; i < n; i++)
+        {
+            Student student = new Student();
+            Console.Write($"\nВведіть ім'я студента {i + 1}: ");
+            student.Name = Console.ReadLine()!;
+            Console.Write("Введіть середній бал: ");
+            student.AverageGrade = double.Parse(Console.ReadLine()!.Replace('.', ','));
+            students.Add(student);
+        }
+
+        JsonSerializerOptions options = new JsonSerializerOptions { WriteIndented = true };
+        string json = JsonSerializer.Serialize(students, options);
+        File.WriteAllText(filePath, json);
+        Console.WriteLine("\nДані збережено у файл.");
+    }
+    else if (choice == "2")
+    {
+        try {
+            string jsonFromFile = File.ReadAllText(filePath);
+            students = JsonSerializer.Deserialize<List<Student>>(jsonFromFile) ?? new List<Student>();
+            Console.WriteLine("\nДані завантажено з students.json.");
+        }
+        catch (FileNotFoundException) {
+            Console.WriteLine("Файл students.json не знайдено.");
+            continue;
+        }
+        catch (JsonException) {
+            Console.WriteLine("Помилка: неправильний формат JSON-файлу.");
+            continue;
+        }
+        catch (IOException) {
+            Console.WriteLine("Помилка під час читання файлу.");
+            continue;
+        }
+        catch (UnauthorizedAccessException) {
+            Console.WriteLine("Немає дозволу на читання файлу.");
+            continue;
+        }
+    }
+    else if (choice == "0") { break; }
+    else { Console.WriteLine("Невідомий пункт меню."); continue; }
+
+    // Виведення списку студентів
+    Console.WriteLine("Список студентів:");
+    foreach (Student student in students) { Console.WriteLine($"{student.Name} - середній бал: {student.AverageGrade}"); }
+
+    // Пошук студента з найвищим середнім балом
+    if (students.Count > 0)
+    {
+        Student bestStudent = students[0];
+        foreach (Student student in students)
+        {
+            if (student.AverageGrade > bestStudent.AverageGrade) { bestStudent = student; }
+        }
+        Console.WriteLine("\nСтудент із найвищим балом:");
+        Console.WriteLine($"{bestStudent.Name} - {bestStudent.AverageGrade}");
+        Console.WriteLine("-----------------------------------------");
+    }
+}
+
+
+
+
+public class Student
+{
+    public string Name { get; set; } = "";
+    public double AverageGrade { get; set; }
+}
